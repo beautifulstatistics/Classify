@@ -4,6 +4,12 @@
 # In[ ]:
 
 
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
 from sklearn. preprocessing import label_binarize
 from sklearn.utils import shuffle
 from sklearn.calibration import CalibratedClassifierCV
@@ -34,7 +40,6 @@ from sklearn.neighbors import KNeighborsClassifier
 class Classify:
     """
     This function assits in the classification task. It cannot do multi-label classifications.
-    See Classfiy.pdf/.html for a demontration.
     """
     
     def __init__(self):
@@ -120,6 +125,7 @@ class Classify:
         if y.dtype != np.dtype('O'):
             print('y must be of dtype Object with each element of type str!!')
             self.data_valid = False
+            return
     
         # Check to make sure factors and response have the same number of rows.
         
@@ -199,8 +205,7 @@ class Classify:
             return
         
         if priors == None:
-            priors = y.value_counts(normalize=True)[self.C].values
-            self.priors = np.append(priors,sum(priors**2))
+            self.priors = np.append(y.value_counts(normalize=True)[self.C].values,1/self.L)
         elif len(priors) == self.L:
             priors = np.array(priors)
             self.priors = priors/sum(priors)
@@ -308,8 +313,7 @@ class Classify:
                     probs[test] = cbc.predict_proba(X_test)
 
             return(probs, warn)
-            #return(np.tile(self.priors,(self.N,1)),[])
-            #return(1/self.L + np.ones(shape=(self.N,self.L+1)),[])
+            #return(1/self.L + np.ones(shape=(sclf.N,self.L+1)),[])
 
         def compute_curves(probs):
             res = 200
@@ -398,17 +402,6 @@ class Classify:
             print(' Added.')
         
     def remove(self,name=None, keepn=None, by_label = None):
-        """
-        To remove fits.
-        
-        name: the name of the classifier to remove.
-        
-        keepn: the number of top classifiers to keep. all other will be removed.
-        
-        by_label: the label you care about. Keepn will use this label to chose which
-        ones to remove.
-        """       
-        
         if name == None and keepn==None:
             print('Choose a name or the top n to keep.')
         elif name != None and keepn != None:
@@ -488,7 +481,7 @@ class Classify:
         else:
             print('\nPositive label is ' + label + '\n')
         
-        priorp = self.priors[label_position]
+        priorp= self.priors[label_position]
         
         if label == 'Averaged':
             headers = ['Model Name','E(AP)','SD(AP|Average Level)','SD(AP|Average Validation)']
@@ -505,23 +498,21 @@ class Classify:
                                   self.fits[i]['metrics']['pr_levelstd'][label_position]])
         
         metrics.sort(reverse=True, key=lambda x: x[1])
-        
         if topn >= 1:
-            topn = int(topn)
+            metrics1 = metrics[:int(topn)]
+            metrics2 = metrics1.copy()
         else:
-            topn = len(metrics)
-         
-        metrics1 = metrics[:topn].copy()
-        metrics2 = metrics1.copy()
-
-        metrics1.append(['prior only',priorp])
-        metrics1.append(['perfect',1])
+            metrics1 = metrics
+            metrics2 = metrics1.copy()
+            
+        metrics2.append(['prior only',priorp])
+        metrics2.append(['perfect',1])
         
-        metrics1.sort(reverse=True, key=lambda x: x[1])
+        metrics2.sort(reverse=True, key=lambda x: x[1])
         
-        print(tabulate(metrics1,headers=headers))
+        print(tabulate(metrics2,headers=headers))
         
-        for name in [i[0] for i in metrics2]:
+        for name in [i[0] for i in metrics1]:
             x = self.fits[name]['curves']['recall'][:,label_position]
             y = self.fits[name]['curves']['prec'][:,label_position]
             plt.plot(x,y,label=name)
@@ -533,11 +524,6 @@ class Classify:
         plt.show()
           
     def inspect(self,name):
-        """
-        Inspect a particular fit.
-        
-        name : name of classifier. Use clf.compare() for performances, or clf.list_fits for a list.
-        """
         
         if name not in self.fits:
             print('Your model does not exist!')
@@ -622,7 +608,7 @@ class Classify:
         
         self.add_fit(DecisionTreeClassifier())
         self.add_fit(ExtraTreeClassifier())
-    
+        
         self.add_fit(AdaBoostClassifier())
         self.add_fit(BaggingClassifier())
         self.add_fit(RandomForestClassifier())
