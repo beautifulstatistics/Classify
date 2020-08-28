@@ -34,7 +34,7 @@ from sklearn.ensemble import AdaBoostClassifier, BaggingClassifier, ExtraTreesCl
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, StackingClassifier
 from sklearn.ensemble import RandomTreesEmbedding
 from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier
-from sklearn.linear_model import Perceptron, RidgeClassifier, SGDClassifier
+from sklearn.linear_model import Perceptron, RidgeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
 class Classify:
@@ -594,7 +594,6 @@ class Classify:
         PassiveAggressiveClassifier
         Perceptron
         RidgeClassifier
-        SGDClassifier
         MLPClassifier
         KNeighborsClassifier
         """
@@ -618,7 +617,6 @@ class Classify:
         self.add_fit(PassiveAggressiveClassifier(max_iter=max_iter))
         self.add_fit(Perceptron(max_iter=max_iter))
         self.add_fit(RidgeClassifier(max_iter=max_iter))
-        self.add_fit(SGDClassifier(max_iter=max_iter))
         
         self.add_fit(MLPClassifier(max_iter= max_iter))
         self.add_fit(KNeighborsClassifier())
